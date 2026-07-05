@@ -49,15 +49,15 @@ export default function OrdersPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
       <div className="flex items-center gap-3 mb-8">
-        <Package className="w-7 h-7 text-gray-700" />
-        <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
+        <Package className="w-7 h-7 text-white" />
+        <h1 className="text-3xl font-bold text-white">My Orders</h1>
       </div>
 
       {!orders || orders.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-gray-500 mb-2">No orders yet</h2>
-          <p className="text-gray-400 text-sm mb-6">Win an auction to see your orders here.</p>
+          <p className="text-gray-800 text-sm mb-6">Win an auction to see your orders here.</p>
           <Link
             href="/auctions"
             className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-neutral-800 transition-colors"
@@ -83,10 +83,10 @@ export default function OrdersPage() {
                   <h2 className="font-bold text-gray-900 text-lg mt-1">
                     {order.auction?.title || "Auction Item"}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-800">
                     Winning bid: <span className="font-semibold text-gray-800">${order.amount}</span>
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-800">
                     Order ID: <span className="font-mono">{order._id}</span>
                   </p>
                 </div>
@@ -107,7 +107,7 @@ export default function OrdersPage() {
                     </button>
                   )}
                   {order.paymentStatus === "PAID" && order.paidAt && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-800">
                       Paid {new Date(order.paidAt).toLocaleDateString()}
                     </p>
                   )}
