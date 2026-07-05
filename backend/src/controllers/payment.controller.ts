@@ -4,6 +4,8 @@ import stripe from "../config/stripe.js";
 
 import Order from "../models/order.model.js";
 import AuctionItem from "../models/auction-item.model.js";
+import User from "../models/user.model.js";
+import PaymentProfile from "../models/payment-profile.model.js";
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
   const { orderId } = req.params;
@@ -143,3 +145,150 @@ export const confirmPayment = async (req: Request, res: Response) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const createSetupIntent = async (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const user = await User.findById(req.user._id).exec();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let stripeCustomerId = user.stripeCustomerId;
+
+    if (!stripeCustomerId) {
+      // Create Stripe customer
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: {
+          userId: user._id.toString(),
+        },
+      });
+      stripeCustomerId = customer.id;
+
+      // Update User database
+      user.stripeCustomerId = stripeCustomerId;
+      await user.save();
+    }
+
+    // Create SetupIntent
+    const setupIntent = await stripe.setupIntents.create({
+      customer: stripeCustomerId,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    return res.json({
+      clientSecret: setupIntent.client_secret,
+    });
+  } catch (error: any) {
+    console.error("Failed to create SetupIntent:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const savePaymentProfile = async (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { setupIntentId, termsAccepted, billingAddress } = req.body;
+
+  if (!setupIntentId) {
+    return res.status(400).json({ message: "SetupIntent ID is required" });
+  }
+
+  if (!termsAccepted) {
+    return res.status(400).json({ message: "Terms must be accepted" });
+  }
+
+  if (!billingAddress || !billingAddress.line1 || !billingAddress.city || !billingAddress.state || !billingAddress.country || !billingAddress.postalCode) {
+    return res.status(400).json({ message: "Complete billing address is required" });
+  }
+
+  try {
+    const user = await User.findById(req.user._id).exec();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Retrieve SetupIntent and expand the payment method
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId, {
+      expand: ["payment_method"],
+    });
+
+    if (setupIntent.status !== "succeeded") {
+      return res.status(400).json({
+        message: `SetupIntent status is ${setupIntent.status}. Expected succeeded.`,
+      });
+    }
+
+    const paymentMethod = setupIntent.payment_method;
+    if (!paymentMethod || typeof paymentMethod === "string") {
+      return res.status(400).json({ message: "Payment method details could not be retrieved" });
+    }
+
+    const paymentMethodId = paymentMethod.id;
+    const paymentMethodType = paymentMethod.type;
+    const cardBrand = paymentMethod.card?.brand || "unknown";
+    const last4 = paymentMethod.card?.last4 || "0000";
+    const billingName = paymentMethod.billing_details?.name || user.name;
+    const billingPhone = paymentMethod.billing_details?.phone || undefined;
+
+    // Save payment profile
+    const paymentProfile = await PaymentProfile.findOneAndUpdate(
+      { userId: user._id },
+      {
+        userId: user._id,
+        stripeCustomerId: setupIntent.customer as string,
+        defaultPaymentMethodId: paymentMethodId,
+        paymentMethodType,
+        cardBrand,
+        last4,
+        billingName,
+        billingPhone,
+        billingAddress: {
+          line1: billingAddress.line1,
+          line2: billingAddress.line2,
+          city: billingAddress.city,
+          state: billingAddress.state,
+          country: billingAddress.country,
+          postalCode: billingAddress.postalCode,
+        },
+        termsAccepted,
+        termsAcceptedAt: new Date(),
+        status: "ACTIVE",
+      },
+      { upsert: true, new: true }
+    );
+
+    // Update User document
+    user.hasPaymentProfile = true;
+    user.defaultPaymentMethodId = paymentMethodId;
+    user.stripeCustomerId = setupIntent.customer as string;
+    await user.save();
+
+    // Emit Socket event: payment:updated
+    const { io } = await import("../server.js");
+    io.to(`user:${user._id.toString()}`).emit("payment:updated", {
+      hasPaymentProfile: true,
+      cardBrand,
+      last4,
+    });
+
+    return res.json({
+      success: true,
+      message: "Payment profile updated successfully",
+      profile: paymentProfile,
+    });
+  } catch (error: any) {
+    console.error("Failed to save payment profile:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+

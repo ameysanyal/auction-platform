@@ -33,6 +33,7 @@ const errorHandler = (
 
   res.status(statusCode).json({
     success: false,
+    code: err.code,
     message: err.message || "Internal Server Error",
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });

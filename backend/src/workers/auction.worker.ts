@@ -11,6 +11,7 @@ import notificationService from "../services/notification.service.js";
 import { NotificationType } from "../models/notification.model.js"; // Adjust path if necessary
 
 import { io } from "../server.js";
+import auctionService from "../services/auction.service.js";
 
 const redisHost: string = process.env.REDIS_HOST || "127.0.0.1";
 const redisPort: number = process.env.REDIS_PORT
@@ -34,54 +35,12 @@ export const auctionWorker = new Worker(
 
     const { auctionId } = job.data;
 
-    const auction = await AuctionItem.findById(auctionId);
-
-    if (!auction) return;
-
-    if (auction.status !== "active") return;
-
-    if (!auction.highestBidder) {
-      auction.status = "expired_no_bids";
-
-      await auction.save();
-
-      io.to(auctionId).emit("auction-expired", {
-        auctionId,
-      });
-
-      return;
+    try {
+      await auctionService.processAuctionEnd(auctionId);
+    } catch (err: any) {
+      console.error(`[auctionWorker] Failed to process closure for auction ${auctionId}:`, err);
+      throw err;
     }
-
-    auction.status = "pending_payment";
-
-    await auction.save();
-
-    const order = await orderService.createOrder({
-      auctionId,
-      winnerId: auction.highestBidder.toString(),
-      amount: auction.currentBid,
-    });
-
-    await notificationService.create({
-      userId: auction.highestBidder.toString(),
-
-      type: NotificationType.AUCTION_WON,
-
-      title: "Auction Won",
-
-      message: `You won ${auction.title}`,
-
-      metadata: {
-        auctionId: auction._id,
-        orderId: order._id,
-      },
-    });
-
-    io.to(auctionId).emit("auction-ended", {
-      auctionId,
-      winner: auction.highestBidder,
-      amount: auction.currentBid,
-    });
   },
   {
     connection: redisConnection,

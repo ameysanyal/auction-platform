@@ -6,6 +6,7 @@ import { useAuction } from "@/hooks/useAuctions";
 import { useSocket } from "@/hooks/useSocket";
 import { useAuthStore } from "@/store/auth.store";
 import { placeBid } from "@/services/bid.service";
+import api from "@/services/api";
 import { toast } from "sonner";
 import { ArrowLeft, Clock, Shield, TrendingUp, Award, User } from "lucide-react";
 import Link from "next/link";
@@ -134,11 +135,23 @@ export default function AuctionDetailsPage() {
 
     setIsSubmitting(true);
     try {
-      await placeBid(auctionId, amount);
-      toast.success(`Your bid of $${amount} was successfully placed!`);
-      setBidAmount("");
+      // 1. Perform eligibility check
+      const checkResponse = await api.post(`/auctions/${auctionId}/check-eligibility`, { amount });
+
+      if (checkResponse.data.success) {
+        // 2. Perform the actual bid placement
+        await placeBid(auctionId, amount);
+        toast.success(`Your bid of $${amount} was successfully placed!`);
+        setBidAmount("");
+      }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to place bid");
+      const errorData = err.response?.data;
+      if (errorData?.code === "PAYMENT_PROFILE_REQUIRED") {
+        toast.error("Please complete your payment setup before bidding.");
+        router.push(`/payment/setup?redirect=/auctions/${auctionId}`);
+      } else {
+        toast.error(errorData?.message || err.message || "Failed to place bid");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -187,7 +200,7 @@ export default function AuctionDetailsPage() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       {/* Back button */}
-      <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition-colors">
+      <Link href="/" className="inline-flex items-center gap-2 text-white hover:text-black mb-8 transition-colors">
         <ArrowLeft size={16} /> Back to Auctions
       </Link>
 
@@ -221,17 +234,17 @@ export default function AuctionDetailsPage() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               {getStatusBadge()}
-              <span className="text-gray-500 text-sm">Ends {new Date(auction.endTime).toLocaleDateString()}</span>
+              <span className="text-white text-sm">Ends {new Date(auction.endTime).toLocaleDateString()}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">{auction.title}</h1>
-            <p className="text-sm text-gray-500 mt-2 flex items-center gap-1.5">
-              <User size={14} /> Listed by <span className="font-medium text-gray-700">{auction.seller?.name || "Seller"}</span>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{auction.title}</h1>
+            <p className="text-sm text-white mt-2 flex items-center gap-1.5">
+              <User size={14} /> Listed by <span className="font-medium text-white">{auction.seller?.name || "Seller"}</span>
             </p>
           </div>
 
           <div className="border-t border-b border-gray-100 py-6 space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Item Description</h2>
-            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{auction.description || "No description provided."}</p>
+            <h2 className="text-lg font-semibold uppercase tracking-wider text-white">Item Description</h2>
+            <p className="text-white text-lg leading-relaxed whitespace-pre-wrap">{auction.description || "No description provided."}</p>
           </div>
 
           {/* Bidding Card */}

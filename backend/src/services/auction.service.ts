@@ -2,6 +2,7 @@ import AuctionItem from "../models/auction-item.model.js";
 import { Types } from "mongoose";
 import { auctionQueue } from "../jobs/auction.queue.js";
 import { appLogger } from "../config/logger.js";
+import { io } from "../server.js";
 
 // Define an enum for the explicit auction statuses
 export enum AuctionStatus {
@@ -124,6 +125,177 @@ class AuctionService {
       pages: Math.ceil(total / limit),
       data: auctions,
     };
+  }
+
+  async processAuctionEnd(auctionId: string | Types.ObjectId) {
+    const idStr = auctionId.toString();
+    appLogger.info(`[AuctionService] Ending auction ${idStr} and determining highest bidder`);
+
+    const auction = await AuctionItem.findById(idStr).exec();
+    if (!auction) {
+      appLogger.warn(`[AuctionService] Auction ${idStr} not found during processAuctionEnd`);
+      return;
+    }
+
+    if (auction.status !== "active") {
+      appLogger.info(`[AuctionService] Auction ${idStr} is already in status "${auction.status}". Skipping.`);
+      return;
+    }
+
+    // Case 1: No bids
+    if (!auction.highestBidder) {
+      auction.status = AuctionStatus.EXPIRED_NO_BIDS;
+      await auction.save();
+
+      appLogger.info(`[AuctionService] Auction ${idStr} expired with no bids`);
+
+      // Socket.IO events
+      io.to(idStr).emit("auction-expired", { auctionId: idStr });
+      io.to(idStr).emit("auction:ended", { auctionId: idStr, winner: null, amount: 0, status: "expired_no_bids" });
+      return;
+    }
+
+    // Case 2: Winning bidder present
+    const winnerId = auction.highestBidder.toString();
+    const amount = auction.currentBid;
+
+    // Load bidder user with default payment method
+    const User = (await import("../models/user.model.js")).default;
+    const Order = (await import("../models/order.model.js")).default;
+    const notificationService = (await import("./notification.service.js")).default;
+    const { NotificationType } = await import("../models/notification.model.js");
+    const stripe = (await import("../config/stripe.js")).default;
+
+    const winner = await User.findById(winnerId).exec();
+
+    let order;
+    let paymentSucceeded = false;
+    let paymentIntentId = "";
+
+    if (winner && winner.hasPaymentProfile && winner.defaultPaymentMethodId && winner.stripeCustomerId) {
+      appLogger.info(
+        `[AuctionService] Attempting automatic off-session charge of $${amount} for winner ${winnerId} on auction ${idStr}`
+      );
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(amount * 100),
+          currency: "usd",
+          customer: winner.stripeCustomerId,
+          payment_method: winner.defaultPaymentMethodId,
+          off_session: true,
+          confirm: true,
+        });
+
+        if (paymentIntent.status === "succeeded") {
+          paymentSucceeded = true;
+          paymentIntentId = paymentIntent.id;
+          appLogger.info(
+            `[AuctionService] Automatic off-session charge succeeded: paymentIntentId=${paymentIntentId}`
+          );
+        } else {
+          appLogger.warn(
+            `[AuctionService] Automatic charge status is "${paymentIntent.status}" (not succeeded) for auction ${idStr}`
+          );
+        }
+      } catch (err: any) {
+        appLogger.error(
+          `[AuctionService] Automatic off-session charge failed for winner ${winnerId}: ${err.message}`
+        );
+      }
+    } else {
+      appLogger.info(
+        `[AuctionService] Winner ${winnerId} does not have a complete payment profile. Falling back to unpaid order.`
+      );
+    }
+
+    if (paymentSucceeded) {
+      // Create PAID order
+      order = await Order.create({
+        auction: auction._id,
+        winner: winnerId,
+        seller: auction.seller,
+        amount,
+        paymentStatus: "PAID",
+        stripeSessionId: paymentIntentId,
+        paidAt: new Date(),
+      });
+
+      auction.status = AuctionStatus.COMPLETED;
+      await auction.save();
+
+      // Notify winner of success
+      await notificationService.create({
+        userId: winnerId,
+        type: NotificationType.AUCTION_WON,
+        title: "Auction Won & Paid Successfully",
+        message: `Congratulations! You won "${auction.title}" and your card was charged $${amount} automatically.`,
+        metadata: {
+          auctionId: auction._id,
+          orderId: order._id,
+        },
+      });
+
+      // Broadcast Socket events
+      io.to(idStr).emit("auction-ended", {
+        auctionId: idStr,
+        winner: winnerId,
+        amount,
+        paid: true,
+      });
+      io.to(idStr).emit("auction:ended", {
+        auctionId: idStr,
+        winner: winnerId,
+        amount,
+        paid: true,
+      });
+    } else {
+      // Create PENDING order
+      order = await Order.create({
+        auction: auction._id,
+        winner: winnerId,
+        seller: auction.seller,
+        amount,
+        paymentStatus: "PENDING",
+      });
+
+      auction.status = AuctionStatus.PENDING_PAYMENT;
+      await auction.save();
+
+      // Notify winner of pending payment
+      await notificationService.create({
+        userId: winnerId,
+        type: NotificationType.AUCTION_WON,
+        title: "Auction Won - Payment Action Required",
+        message: `You won "${auction.title}"! Automatic payment failed or profile setup was incomplete. Please click here to complete payment of $${amount}.`,
+        metadata: {
+          auctionId: auction._id,
+          orderId: order._id,
+        },
+      });
+
+      // Broadcast Socket events
+      io.to(idStr).emit("auction-ended", {
+        auctionId: idStr,
+        winner: winnerId,
+        amount,
+        paid: false,
+      });
+      io.to(idStr).emit("auction:ended", {
+        auctionId: idStr,
+        winner: winnerId,
+        amount,
+        paid: false,
+      });
+
+      // Emit payment:required event
+      io.to(`user:${winnerId}`).emit("payment:required", {
+        auctionId: idStr,
+        orderId: order._id.toString(),
+        amount,
+      });
+    }
+
+    return { auction, order };
   }
 }
 

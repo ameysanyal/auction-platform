@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "node --use-system-ca --import tsx/esm src/server.ts",
+    "dev:watch": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node --use-system-ca dist/server.js"
   },
   "keywords": [],
   "author": "",

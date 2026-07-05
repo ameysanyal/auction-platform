@@ -3,6 +3,7 @@ import orderService from "../services/order.service.js";
 import notificationService from "../services/notification.service.js";
 import { NotificationType } from "../models/notification.model.js";
 import { io } from "../server.js";
+import auctionService from "../services/auction.service.js";
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
@@ -24,43 +25,10 @@ const runCleanup = async () => {
     for (const auction of expiredAuctions) {
       const auctionId = auction._id.toString();
       try {
-        if (!auction.highestBidder) {
-          auction.status = "expired_no_bids";
-          await auction.save();
-          io.to(auctionId).emit("auction-expired", { auctionId });
-          console.log(`[fallback-cron] Auction ${auctionId} → expired_no_bids.`);
-          continue;
-        }
-
-        auction.status = "pending_payment";
-        await auction.save();
-
-        const order = await orderService.createOrder({
-          auctionId,
-          winnerId: auction.highestBidder.toString(),
-          amount: auction.currentBid,
-        });
-
-        await notificationService.create({
-          userId: auction.highestBidder.toString(),
-          type: NotificationType.AUCTION_WON,
-          title: "Auction Won",
-          message: `You won the auction: ${auction.title}`,
-          metadata: {
-            auctionId: auction._id,
-            orderId: order._id,
-          },
-        });
-
-        io.to(auctionId).emit("auction-ended", {
-          auctionId,
-          winner: auction.highestBidder,
-          amount: auction.currentBid,
-        });
-
-        console.log(`[fallback-cron] Auction ${auctionId} → pending_payment (winner: ${auction.highestBidder}).`);
+        await auctionService.processAuctionEnd(auctionId);
+        console.log(`[fallback-cron] Auction ${auctionId} closed successfully.`);
       } catch (auctionErr) {
-        console.error(`[fallback-cron] Failed to close auction ${auctionId}:`, auctionErr);
+        console.error(`[fallback-cron] Failed to close auction ${auctionId} in fallback cleanup:`, auctionErr);
       }
     }
   } catch (err) {

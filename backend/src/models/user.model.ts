@@ -10,6 +10,11 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   role: string;
+  stripeCustomerId?: string;
+  defaultPaymentMethodId?: string;
+  hasPaymentProfile?: boolean;
+  isEmailVerified?: boolean;
+  status?: string;
 }
 
 // 2. Create the Schema corresponding to the document interface
@@ -39,6 +44,24 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       enum: ["USER", "ADMIN"],
       default: "USER",
+    },
+    stripeCustomerId: {
+      type: String,
+    },
+    defaultPaymentMethodId: {
+      type: String,
+    },
+    hasPaymentProfile: {
+      type: Boolean,
+      default: false,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: true,
+    },
+    status: {
+      type: String,
+      default: "ACTIVE",
     },
   },
   {

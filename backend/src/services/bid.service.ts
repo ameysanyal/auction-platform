@@ -1,5 +1,6 @@
 import Bid from "../models/bid.model.js";
 import AuctionItem from "../models/auction-item.model.js";
+import User from "../models/user.model.js";
 import { acquireLock, releaseLock } from "../utils/redis-lock.util.js";
 import { Types } from "mongoose";
 import { io } from "../server.js";
@@ -40,6 +41,30 @@ class BidService {
       if (!auction) {
         appLogger.warn(`[BidService] Auction ${auctionId} not found`);
         throw new Error("Auction not found");
+      }
+
+      const bidder = await User.findById(bidderId).exec();
+      if (!bidder) {
+        appLogger.warn(`[BidService] Bidder ${bidderId} not found`);
+        throw new Error("Bidder not found");
+      }
+
+      if (bidder.isEmailVerified === false) {
+        appLogger.warn(`[BidService] Bid rejected — bidder ${bidderId} email not verified`);
+        throw new Error("Please verify your email address before bidding.");
+      }
+
+      if (bidder.status !== "ACTIVE") {
+        appLogger.warn(`[BidService] Bid rejected — bidder ${bidderId} account inactive`);
+        throw new Error("Your account is not active.");
+      }
+
+      if (!bidder.hasPaymentProfile) {
+        appLogger.warn(`[BidService] Bid rejected — bidder ${bidderId} has no payment profile`);
+        const error = new Error("Please add a payment method before placing bids.") as any;
+        error.code = "PAYMENT_PROFILE_REQUIRED";
+        error.statusCode = 400;
+        throw error;
       }
 
       if (new Date() > auction.endTime) {
