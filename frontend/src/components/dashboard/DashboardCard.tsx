@@ -22,7 +22,7 @@ export default function DashboardCard({
 
         <div>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-800">
             {title}
           </p>
 

@@ -48,7 +48,7 @@ export default function DashboardNavbar() {
       <div className="flex items-center gap-4 shrink-0">
         <Link
           href="/notifications"
-          className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          className="relative p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
         >
           <Bell className="w-6 h-6" />
           <NotificationBell />

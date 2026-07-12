@@ -284,7 +284,7 @@ export default function AuctionDetailsPage() {
                   </label>
                   <div className="relative rounded-xl shadow-sm">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                      <span className="text-gray-500 font-semibold">$</span>
+                      <span className="text-gray-700 font-semibold">$</span>
                     </div>
                     <input
                       type="number"
@@ -295,10 +295,10 @@ export default function AuctionDetailsPage() {
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       placeholder={`Enter $${minRequiredBid} or more`}
-                      className="block w-full rounded-xl border border-gray-200 py-3 pl-8 pr-12 focus:border-black focus:ring-1 focus:ring-black outline-none text-base"
+                      className="block w-full text-black rounded-xl border border-gray-200 py-3 pl-8 pr-12 focus:border-black focus:ring-1 focus:ring-black outline-none text-base"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                      <span className="text-gray-400 text-xs font-medium">USD</span>
+                      <span className="text-gray-700 text-xs font-medium">USD</span>
                     </div>
                   </div>
 

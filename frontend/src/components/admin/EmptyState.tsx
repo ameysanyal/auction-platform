@@ -23,7 +23,7 @@ export default function EmptyState({
         {title}
       </h2>
 
-      <p className="text-gray-500 mt-2">
+      <p className="text-gray-800 mt-2">
         {description}
       </p>
 

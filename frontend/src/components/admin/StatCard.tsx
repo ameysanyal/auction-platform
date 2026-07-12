@@ -19,11 +19,11 @@ export default function StatCard({
     <div className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition">
       <div className="flex justify-between items-center">
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-800">
             {title}
           </p>
 
-          <h2 className="text-3xl font-bold mt-2">
+          <h2 className="text-3xl font-bold mt-2 text-black">
             {value}
           </h2>
         </div>
