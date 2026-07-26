@@ -316,7 +316,7 @@ function SetupPageContent() {
                           value={billing.line1}
                           onChange={handleInputChange}
                           placeholder="123 Collectible Way"
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
                         />
                       </div>
                       <div className="sm:col-span-2">
@@ -329,7 +329,7 @@ function SetupPageContent() {
                           value={billing.line2}
                           onChange={handleInputChange}
                           placeholder="Apartment, suite, floor…"
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
                         />
                       </div>
                       <div>
@@ -343,7 +343,7 @@ function SetupPageContent() {
                           value={billing.city}
                           onChange={handleInputChange}
                           placeholder="Mumbai"
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm  text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
                         />
                       </div>
                       <div>
@@ -357,7 +357,7 @@ function SetupPageContent() {
                           value={billing.state}
                           onChange={handleInputChange}
                           placeholder="Maharashtra"
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm  text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
                         />
                       </div>
                       <div>
@@ -368,7 +368,7 @@ function SetupPageContent() {
                           name="country"
                           value={billing.country}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white appearance-none"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white appearance-none"
                         >
                           <option value="IN">India</option>
                           <option value="US">United States</option>
@@ -392,7 +392,7 @@ function SetupPageContent() {
                           value={billing.postalCode}
                           onChange={handleInputChange}
                           placeholder="400001"
-                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
+                          className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl text-sm text-black outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all bg-neutral-50 focus:bg-white"
                         />
                       </div>
                     </div>

@@ -49,7 +49,7 @@ export const login = async (req: Request, res: Response) => {
 
   if (!user) {
     return res.status(401).json({
-      message: "Invalid credentials",
+      message: "Account not found with this email address.",
     });
   }
 

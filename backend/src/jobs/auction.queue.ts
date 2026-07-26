@@ -1,3 +1,4 @@
+//This code initializes a BullMQ job queue named "auction-queue" powered by a Redis database.
 import { Queue, type ConnectionOptions } from "bullmq"; 
 
 const redisHost: string = process.env.REDIS_HOST || "127.0.0.1";

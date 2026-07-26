@@ -9,10 +9,6 @@ const redisPort: number = process.env.REDIS_PORT
 // The .trim() method wipes out hidden spaces or \r carriage returns!
 const redisPassword: string = (process.env.REDIS_PASSWORD || "auctionbidding").trim();
 
-// console.log("Sanitized values:");
-// console.log(`Host: '${redisHost}'`);
-// console.log(`Port: ${redisPort}`);
-// console.log(`Password: '${redisPassword}'`);
 // 2. Initialize the Redis client instance directly
 const redis = new Redis({
   host: redisHost,

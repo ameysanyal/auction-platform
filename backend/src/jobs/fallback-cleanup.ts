@@ -1,8 +1,8 @@
+//This code is a **failsafe timer** that runs every 15 minutes to automatically close expired auctions.
+//It checks the database for any auctions that are still marked as "active" even though their end time has passed (which can happen if your primary job queue, BullMQ, crashes or restarts). If it finds any, 
+//it loops through them and processes their closure one by one.
+
 import AuctionItem from "../models/auction-item.model.js";
-import orderService from "../services/order.service.js";
-import notificationService from "../services/notification.service.js";
-import { NotificationType } from "../models/notification.model.js";
-import { io } from "../server.js";
 import auctionService from "../services/auction.service.js";
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
