@@ -1,47 +1,50 @@
 "use client";
 
-import {
-  useRouter,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/auth.store";
+import { getMe } from "@/services/auth.service";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+export const useAuth = () => {
+  const router = useRouter();
+  const { user, setUser } = useAuthStore();
+  const [checking, setChecking] = useState(true);
 
-import {
-  useAuthStore,
-} from "@/store/auth.store";
+  useEffect(() => {
+    let isMounted = true;
 
-export const useAuth =
-  () => {
-    const router =
-      useRouter();
-
-    const { token } =
-      useAuthStore();
-
-    // Track whether the Zustand persist middleware
-    // has finished rehydrating from localStorage.
-    // Without this, on page refresh the store briefly
-    // shows token=null (before hydration) and wrongly
-    // redirects to /login.
-    const [hydrated, setHydrated] =
-      useState(false);
-
-    useEffect(() => {
-      setHydrated(true);
-    }, []);
-
-    useEffect(() => {
-      if (hydrated && !token) {
-        router.push(
-          "/login"
-        );
+    const verifyAuth = async () => {
+      try {
+        if (!user) {
+          const me = await getMe();
+          if (isMounted && me) {
+            setUser(me);
+            setChecking(false);
+            return;
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setUser(null);
+          router.push("/login");
+        }
+      } finally {
+        if (isMounted) {
+          setChecking(false);
+        }
       }
-    }, [
-      token,
-      router,
-      hydrated,
-    ]);
-  };
+    };
+
+    verifyAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, setUser, router]);
+
+  useEffect(() => {
+    if (!checking && !user) {
+      router.push("/login");
+    }
+  }, [checking, user, router]);
+};

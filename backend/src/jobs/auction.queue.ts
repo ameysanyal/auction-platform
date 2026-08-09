@@ -18,3 +18,8 @@ export const redisConnection: ConnectionOptions = {
 export const auctionQueue = new Queue("auction-queue", {
   connection: redisConnection,
 });
+
+/*
+Setting	                                         Behavior when Redis disconnects
+maxRetriesPerRequest: 20 (default)	             Retries 20 times, then throws a fatal error and crashes the worker.
+maxRetriesPerRequest: null (BullMQ requirement)	 Fails immediately or waits for reconnection without aborting blocking commands. BullMQ safely manages the retry lifecycle itself. */

@@ -11,6 +11,23 @@ import {
 import jwt from "jsonwebtoken";
 
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? ("none" as const) : ("lax" as const),
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const sendTokenCookie = (res: Response, token: string) => {
+  res.cookie("accessToken", token, cookieOptions);
+  res.cookie("token", token, cookieOptions);
+};
+
+const clearTokenCookie = (res: Response) => {
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("token", cookieOptions);
+};
+
 export const register = async (req: Request, res: Response) => {
 
   appLogger.info(`reached register route`);
@@ -34,9 +51,17 @@ export const register = async (req: Request, res: Response) => {
     password: hashedPassword,
   });
 
+  const token = generateToken(user);
+  sendTokenCookie(res, token);
+
   return res.status(201).json({
-    user,
-    token: generateToken(user),
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    token,
   });
 };
 
@@ -71,7 +96,10 @@ export const login = async (req: Request, res: Response) => {
   user.refreshToken = refreshToken;
   await user.save();
 
-  // 4. Return the access token and refresh token in the response payload
+  // 4. Set HttpOnly cookie
+  sendTokenCookie(res, token);
+
+  // 5. Return the access token and refresh token in the response payload
   return res.json({
     token,
     refreshToken,
@@ -88,16 +116,13 @@ export const me = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
+  if (req.user?._id) {
+    await User.findByIdAndUpdate(req.user._id, {
+      refreshToken: null,
     });
   }
 
-  await User.findByIdAndUpdate(req.user._id, {
-    refreshToken: null,
-  });
+  clearTokenCookie(res);
 
   return res.status(200).json({
     success: true,
@@ -143,18 +168,16 @@ export const adminSignUp = async (req: Request, res: Response) => {
     // 6. Save to Database
     await adminUser.save();
 
-    // 7. Optional: Generate a JWT Token right away so they are logged in
-    const token = jwt.sign(
-      { userId: adminUser._id, role: adminUser.role },
-      process.env.JWT_SECRET || "fallback_secret",
-      { expiresIn: "1d" },
-    );
+    // 7. Generate a JWT Token right away so they are logged in
+    const token = generateToken(adminUser);
+    sendTokenCookie(res, token);
 
     // 8. Respond (Do not send the password back!)
     res.status(201).json({
       message: "🚀 Admin account created successfully!",
       token,
       user: {
+        _id: adminUser._id,
         id: adminUser._id,
         name: adminUser.name,
         email: adminUser.email,

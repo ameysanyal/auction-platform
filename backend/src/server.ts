@@ -24,11 +24,24 @@ const server: http.Server = http.createServer(app);
 
 
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+].filter(Boolean) as string[];
+
 export const io = new Server(
   server,
   {
     cors: {
-      origin: "*",
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+          callback(null, true);
+        } else {
+          callback(null, true);
+        }
+      },
+      credentials: true,
     },
   }
 );

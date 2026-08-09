@@ -1,6 +1,22 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 
+const parseCookies = (cookieHeader?: string): Record<string, string> => {
+  const list: Record<string, string> = {};
+  if (!cookieHeader) return list;
+
+  cookieHeader.split(";").forEach((cookie) => {
+    const parts = cookie.split("=");
+    const name = parts.shift()?.trim();
+    if (name) {
+      const value = parts.join("=").trim();
+      list[name] = decodeURIComponent(value);
+    }
+  });
+
+  return list;
+};
+
 /**
  * Registers Socket.io middleware and event handlers for the auction system.
  * 
@@ -12,8 +28,12 @@ export const registerAuctionSocket = (io: Server) => {
   // ==========================================
   // Runs before establishing a connection; validates incoming connection tokens.
   io.use((socket, next) => {
-    // Extract JWT from handshake auth payload or HTTP Authorization header ("Bearer <token>")
+    const cookies = parseCookies(socket.handshake.headers?.cookie);
+    
+    // Extract JWT from cookies, handshake auth payload, or HTTP Authorization header ("Bearer <token>")
     const token =
+      cookies.accessToken ||
+      cookies.token ||
       socket.handshake.auth?.token ||
       socket.handshake.headers?.authorization?.split(" ")[1];
 
@@ -48,12 +68,23 @@ export const registerAuctionSocket = (io: Server) => {
   io.on("connection", (socket) => {
     console.log("Socket Connected:", socket.id, socket.data.user);
 
+    // Derive user ID securely from authenticated socket metadata
+    const authenticatedUserId = socket.data.user?._id || socket.data.user?.userId;
+
+    if (authenticatedUserId) {
+      const userRoom = `user:${authenticatedUserId}`;
+      socket.join(userRoom);
+      console.log(`Socket ${socket.id} automatically joined derived user room: ${userRoom}`);
+    }
+
     /**
-     * Join a user-specific room for targeted notifications (e.g., direct messages, outbid alerts).
-     * Security note: Rely on `socket.data.user` rather than trusting client-supplied `userId` in production.
+     * User room registration is derived from socket.data.user on connection.
+     * Legacy handler retains safety by forcing room join to authenticated user ID only.
      */
-    socket.on("register-user", (userId) => {
-      socket.join(`user:${userId}`);
+    socket.on("register-user", () => {
+      if (authenticatedUserId) {
+        socket.join(`user:${authenticatedUserId}`);
+      }
     });
 
     /**

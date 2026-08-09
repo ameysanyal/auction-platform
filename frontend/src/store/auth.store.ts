@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-interface User {
+export interface User {
   _id: string;
   name: string;
   email: string;
@@ -11,50 +11,30 @@ interface User {
   avatar?: string;
 }
 
-
 interface AuthStore {
   user: User | null;
-
-  token: string | null;
-
-  login: (
-    user: User,
-    token: string
-  ) => void;
-
+  login: (user: User) => void;
+  setUser: (user: User | null) => void;
   logout: () => void;
 }
 
-export const useAuthStore =
-  create<AuthStore>()(
-    persist(
-      set => ({
-        user: null,
-
-        token: null,
-
-        login: (
-          user,
-          token
-        ) => {
-          set({
-            user,
-            token,
-          });
-        },
-
-        logout: () => {
-          set({
-            user: null,
-            token: null,
-          });
-        },
-      }),
-      {
-        name: "auth-storage",
-        storage: createJSONStorage(
-          () => localStorage
-        ),
-      }
-    )
-  );
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      login: (user) => {
+        set({ user });
+      },
+      setUser: (user) => {
+        set({ user });
+      },
+      logout: () => {
+        set({ user: null });
+      },
+    }),
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);

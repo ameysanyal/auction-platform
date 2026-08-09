@@ -19,6 +19,8 @@ import admin from "./middlewares/admin.middleware.js";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 import morgan from 'morgan';
 
+import cookieParser from "cookie-parser";
+
 const app: Application = express();
 
 // 1. Choose format based on environment
@@ -28,7 +30,25 @@ const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
 app.use(morgan(morganFormat));
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+].filter(Boolean) as string[];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(helmet());
 
 // Note = Stripe webhooks break if json parser runs first.

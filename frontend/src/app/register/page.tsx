@@ -28,7 +28,7 @@ export default function RegisterPage() {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-      login(data.user, data.token);
+      login(data.user);
       toast.success("Account created successfully!");
       router.push("/");
       router.refresh();

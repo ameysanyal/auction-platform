@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuthStore } from "../store/auth.store";
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       setSocket(null);
       return;
     }
@@ -17,9 +17,7 @@ export const useSocket = () => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5050";
 
     const clientSocket = io(socketUrl, {
-      auth: {
-        token,
-      },
+      withCredentials: true,
       transports: ["websocket"],
     });
 
@@ -35,7 +33,7 @@ export const useSocket = () => {
     return () => {
       clientSocket.disconnect();
     };
-  }, [token]);
+  }, [user]);
 
   return socket;
 };

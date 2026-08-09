@@ -27,7 +27,7 @@ export default function LoginPage() {
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      login(data.user, data.token);
+      login(data.user);
       toast.success("Successfully logged in!");
       if (data.user.role === "ADMIN") {
         router.push("/admin");

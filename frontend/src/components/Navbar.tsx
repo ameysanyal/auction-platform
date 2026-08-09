@@ -4,8 +4,20 @@ import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
 import { Gavel, LogOut, Plus, Package, LogIn, UserPlus } from "lucide-react";
 
+import { logoutUser } from "@/services/auth.service";
+
 export default function Navbar() {
   const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      logout();
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -50,7 +62,7 @@ export default function Navbar() {
                 {user.name}
               </span>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="flex items-center gap-1.5 text-lg font-medium text-gray-800 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />

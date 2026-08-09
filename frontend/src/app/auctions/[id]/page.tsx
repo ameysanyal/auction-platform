@@ -65,12 +65,6 @@ export default function AuctionDetailsPage() {
     socket.emit("join-auction", auctionId);
     console.log(`Joined room: ${auctionId}`);
 
-    // Register authenticated user for targeted outbid events
-    if (user?._id) {
-      socket.emit("register-user", user._id);
-      console.log(`Registered user: ${user._id}`);
-    }
-
     // Live Bid updates
     socket.on("new-bid", (data: any) => {
       console.log("Socket: new-bid", data);
