@@ -6,6 +6,7 @@ import AuctionItem from "../models/auction-item.model.js";
 import auctionService from "../services/auction.service.js";
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+let cleanupInterval: NodeJS.Timeout | null = null;
 
 const runCleanup = async () => {
   console.log("⏰ [fallback-cron] Running cleanup for expired auctions...");
@@ -36,12 +37,22 @@ const runCleanup = async () => {
   }
 };
 
+export const stopFallbackCron = () => {
+  if (!cleanupInterval) return;
+
+  clearInterval(cleanupInterval);
+  cleanupInterval = null;
+  console.log("[fallback-cron] Scheduler stopped.");
+};
+
 /**
  * Starts the fallback cleanup scheduler.
  * Runs every 15 minutes using native setInterval (no external dependencies).
  * Closes any auctions that BullMQ missed due to server restarts.
  */
 export const startFallbackCron = () => {
-  setInterval(runCleanup, FIFTEEN_MINUTES_MS);
+  if (cleanupInterval) return;
+
+  cleanupInterval = setInterval(runCleanup, FIFTEEN_MINUTES_MS);
   console.log("⏰ [fallback-cron] Scheduler started — running every 15 minutes.");
 };
