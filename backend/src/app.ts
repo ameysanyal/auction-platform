@@ -74,16 +74,16 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/auctions", auctionRoutes);
-app.use("/api/bids", bidRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/notification", notificationRoutes);
-app.use("/api/uploads", uploadRoutes);
-app.use("/api/admin", auth, admin, adminRoutes);
-app.use("/api", dashboardRoutes);
+app.use("/auth", authRoutes);
+app.use("/auctions", auctionRoutes);
+app.use("/bids", bidRoutes);
+app.use("/payments", paymentRoutes);
+app.use("/orders", orderRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/notification", notificationRoutes);
+app.use("/uploads", uploadRoutes);
+app.use("/admin", auth, admin, adminRoutes);
+app.use("/", dashboardRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
