@@ -12,18 +12,26 @@ export const createAuction = async (
       message: "Unauthorized",
     });
   }
-  console.log(req.user)
 
-  const auction =
-    await auctionService.createAuction({
-      ...req.body,
-      seller: req.user._id,
+  const endTime = new Date(req.body.endTime);
+
+  // Server-side guard: reject auctions whose end time is already in the past.
+  // This cannot be bypassed by a client that skips the frontend validation.
+  if (endTime.getTime() <= Date.now()) {
+    return res.status(400).json({
+      message: "Auction end time must be in the future",
     });
+  }
 
-  return res.status(201).json(
-    auction
-  );
+  const auction = await auctionService.createAuction({
+    ...req.body,
+    seller: req.user._id,
+    endTime,
+  });
+
+  return res.status(201).json(auction);
 };
+
 
 export const getAuctions = async (
   req: Request,

@@ -19,7 +19,8 @@ interface ICreateAuctionInput {
   startingPrice: number;
   currentPrice?: number;
   seller: string | Types.ObjectId;
-  endsAt: Date;
+  endTime: Date;
+  images?: string[];
   [key: string]: any; // Allows for additional flexible fields from data payload
 }
 
@@ -32,7 +33,8 @@ class AuctionService {
 
     const auction = await AuctionItem.create(data);
 
-    const delay = new Date(auction.endTime).getTime() - Date.now();
+    // auction.endTime is a MongoDB Date; subtract epoch ms directly — no timezone involved.
+    const delay = auction.endTime.getTime() - Date.now();
 
     appLogger.info(
       `[AuctionService] Auction ${auction._id} created. Scheduling BullMQ close-auction job with delay=${delay}ms`
@@ -58,6 +60,7 @@ class AuctionService {
     appLogger.info(`[AuctionService] BullMQ job queued for auction ${auction._id}`);
     return auction;
   }
+
 
   /**
    * Fetches an auction by ID and populates seller and bidder details

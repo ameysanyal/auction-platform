@@ -41,12 +41,26 @@ export default function CreateAuctionForm() {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const startingPrice = Number(formData.get("startingPrice"));
-    const endTime = formData.get("endTime") as string;
+    const endTimeLocal = formData.get("endTime") as string;
 
-    if (!title || !description || !startingPrice || !endTime) {
+    if (!title || !description || !startingPrice || !endTimeLocal) {
       toast.error("Please fill in all fields");
       return;
     }
+
+    const endTimeDate = new Date(endTimeLocal);
+
+    if (Number.isNaN(endTimeDate.getTime())) {
+      toast.error("Invalid auction end time");
+      return;
+    }
+
+    if (endTimeDate.getTime() <= Date.now()) {
+      toast.error("Auction end time must be in the future");
+      return;
+    }
+
+    const endTime = endTimeDate.toISOString();
 
     if (files.length === 0) {
       toast.error("Please upload at least one image");

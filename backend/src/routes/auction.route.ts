@@ -3,6 +3,8 @@ import {
 } from "express";
 
 import auth from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createAuctionSchema } from "../validators/auction.validator.js";
 
 import {
   createAuction,
@@ -26,6 +28,7 @@ router.get(
 router.post(
   "/",
   auth,
+  validate(createAuctionSchema),
   createAuction
 );
 
