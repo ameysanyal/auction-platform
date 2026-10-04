@@ -22,10 +22,12 @@ class BidService {
       `[BidService] placeBid — auctionId=${auctionId} bidderId=${bidderId} amount=$${amount}`
     );
 
-    // Acquire lock to avoid race conditions during hot bidding
-    const locked = await acquireLock(lockKey);
+    // Acquire lock to avoid race conditions during hot bidding.
+    // Returns a unique token that must be passed to releaseLock so only
+    // the original acquirer can release it (prevents cross-request DEL on expiry).
+    const lockToken = await acquireLock(lockKey);
 
-    if (!locked) {
+    if (lockToken === null) {
       appLogger.warn(`[BidService] Lock contention on auction ${auctionId}. Bid rejected.`);
       throw new Error("Another bid is processing");
     }
@@ -167,9 +169,10 @@ class BidService {
       );
       throw error;
     } finally {
-      // Always clean up the session and release the concurrency lock
+      // Always clean up the session and release the concurrency lock.
+      // Passing lockToken ensures we only delete the key we originally set.
       session.endSession();
-      await releaseLock(lockKey);
+      await releaseLock(lockKey, lockToken);
       appLogger.debug(`[BidService] Session ended and lock released for auction ${auctionId}`);
     }
   }
