@@ -67,6 +67,11 @@ auctionItemSchema.index({
 });
 
 auctionItemSchema.index({
+  status: 1,
+  createdAt: -1,
+});
+
+auctionItemSchema.index({
   seller: 1,
 });
 

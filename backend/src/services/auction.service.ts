@@ -106,18 +106,21 @@ class AuctionService {
 
     const skip = (page - 1) * limit;
 
-    const auctions = await AuctionItem.find({
-      status: "active",
-    })
-      .skip(skip)
-      .limit(limit)
-      .sort({
-        createdAt: -1,
-      });
-
-    const total = await AuctionItem.countDocuments({
-      status: "active",
-    });
+    const [auctions, total] = await Promise.all([
+      AuctionItem.find({
+        status: "active",
+      })
+        .sort({
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      AuctionItem.countDocuments({
+        status: "active",
+      }).exec(),
+    ]);
 
     appLogger.debug(`[AuctionService] Found ${total} active auction(s) (page ${page})`);
 

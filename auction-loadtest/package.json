@@ -1,0 +1,22 @@
+{
+  "name": "auction-platform-loadtest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node scripts/seed.mjs",
+    "reset": "node scripts/reset.mjs",
+    "socket": "node scripts/socketio-load.mjs",
+    "k6:health": "k6 run scripts/01-health.js",
+    "k6:auctions": "k6 run scripts/02-auctions.js",
+    "k6:auth": "k6 run scripts/03-authenticated.js",
+    "k6:bid": "k6 run scripts/04-bidding.js",
+    "k6:mixed": "k6 run scripts/05-mixed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.0",
+    "socket.io-client": "^4.8.3"
+  }
+}
