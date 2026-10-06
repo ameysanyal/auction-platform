@@ -8,8 +8,14 @@ const connectDB = async (): Promise<void> => {
       throw new Error("MONGO_URI environment variable is not defined");
     }
 
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(mongoUri, {
+      maxPoolSize: 100,
+    });
     console.log("MongoDB Connected Successfully");
+    console.log("Mongo pool options:", {
+      maxPoolSize: mongoose.connection.getClient().options.maxPoolSize,
+      minPoolSize: mongoose.connection.getClient().options.minPoolSize,
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`MongoDB Connection Error: ${error.message}`);
