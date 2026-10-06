@@ -1,5 +1,6 @@
 import AuctionItem from "../models/auction-item.model.js";
 import { Types } from "mongoose";
+import { performance } from "node:perf_hooks";
 import { auctionQueue } from "../jobs/auction.queue.js";
 import { appLogger } from "../config/logger.js";
 import { io } from "../server.js";
@@ -105,22 +106,52 @@ class AuctionService {
     appLogger.debug(`[AuctionService] Fetching active auctions — page=${page}, limit=${limit}`);
 
     const skip = (page - 1) * limit;
+    const shouldMeasure = Math.random() < 0.01;
 
-    const [auctions, total] = await Promise.all([
-      AuctionItem.find({
-        status: "active",
+    const findStart = performance.now();
+    const findPromise = AuctionItem.find({
+      status: "active",
+    })
+      .sort({
+        createdAt: -1,
       })
-        .sort({
-          createdAt: -1,
-        })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
-      AuctionItem.countDocuments({
-        status: "active",
-      }).exec(),
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec()
+      .then((result) => ({
+        result,
+        ms: performance.now() - findStart,
+      }));
+
+    const countStart = performance.now();
+    const countPromise = AuctionItem.countDocuments({
+      status: "active",
+    })
+      .exec()
+      .then((result) => ({
+        result,
+        ms: performance.now() - countStart,
+      }));
+
+    const [findResult, countResult] = await Promise.all([
+      findPromise,
+      countPromise,
     ]);
+
+    const auctions = findResult.result;
+    const total = countResult.result;
+
+    if (shouldMeasure) {
+      console.log({
+        page,
+        limit,
+        total,
+        findMs: +findResult.ms.toFixed(2),
+        countMs: +countResult.ms.toFixed(2),
+        totalMs: +(Math.max(findResult.ms, countResult.ms)).toFixed(2),
+      });
+    }
 
     appLogger.debug(`[AuctionService] Found ${total} active auction(s) (page ${page})`);
 
