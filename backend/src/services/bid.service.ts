@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 import { io } from "../server.js";
 import mongoose from "mongoose";
 import { appLogger } from "../config/logger.js";
+import AppError from "../utils/app-error.util.js";
 
 // Interface for the placeBid input payload
 interface IPlaceBidInput {
@@ -29,7 +30,7 @@ class BidService {
 
     if (lockToken === null) {
       appLogger.warn(`[BidService] Lock contention on auction ${auctionId}. Bid rejected.`);
-      throw new Error("Another bid is processing");
+      throw new AppError("Another bid is processing", 409);
     }
 
     appLogger.debug(`[BidService] Lock acquired for auction ${auctionId}`);
@@ -42,23 +43,23 @@ class BidService {
 
       if (!auction) {
         appLogger.warn(`[BidService] Auction ${auctionId} not found`);
-        throw new Error("Auction not found");
+        throw new AppError("Auction not found", 404);
       }
 
       const bidder = await User.findById(bidderId).exec();
       if (!bidder) {
         appLogger.warn(`[BidService] Bidder ${bidderId} not found`);
-        throw new Error("Bidder not found");
+        throw new AppError("Bidder not found", 404);
       }
 
       if (bidder.isEmailVerified === false) {
         appLogger.warn(`[BidService] Bid rejected — bidder ${bidderId} email not verified`);
-        throw new Error("Please verify your email address before bidding.");
+        throw new AppError("Please verify your email address before bidding.", 403);
       }
 
       if (bidder.status !== "ACTIVE") {
         appLogger.warn(`[BidService] Bid rejected — bidder ${bidderId} account inactive`);
-        throw new Error("Your account is not active.");
+        throw new AppError("Your account is not active.", 403);
       }
 
       if (!bidder.hasPaymentProfile) {
@@ -71,7 +72,7 @@ class BidService {
 
       if (new Date() > auction.endTime) {
         appLogger.warn(`[BidService] Bid rejected — auction ${auctionId} has already ended`);
-        throw new Error("Auction has ended");
+        throw new AppError("Auction has ended", 409);
       }
 
       // Safeguard against anti-shill bidding (converting IDs safely to strings)
@@ -79,14 +80,14 @@ class BidService {
         appLogger.warn(
           `[BidService] Bid rejected — seller ${bidderId} attempted to bid on their own auction ${auctionId}`
         );
-        throw new Error("Cannot bid on your own auction");
+        throw new AppError("Cannot bid on your own auction", 400);
       }
 
       if (auction.status !== "active") {
         appLogger.warn(
           `[BidService] Bid rejected — auction ${auctionId} status is "${auction.status}" (not active)`
         );
-        throw new Error("Auction closed");
+        throw new AppError("Auction closed", 409);
       }
 
       // Check current bid or fallback to the initial starting price
@@ -96,7 +97,7 @@ class BidService {
         appLogger.warn(
           `[BidService] Bid rejected — amount $${amount} ≤ current minimum $${minimumBid} for auction ${auctionId}`
         );
-        throw new Error("Bid must be higher than current bid");
+        throw new AppError("Bid must be higher than current bid", 400);
       }
 
       // Store the previous highest bidder before overriding it
