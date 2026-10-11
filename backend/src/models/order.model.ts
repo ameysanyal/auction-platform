@@ -31,7 +31,6 @@ const orderSchema =
           Schema.Types.ObjectId,
         ref: "AuctionItem",
         required: true,
-        unique: true,
       },
 
       winner: {
