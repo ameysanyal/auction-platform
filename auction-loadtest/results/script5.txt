@@ -1,0 +1,75 @@
+ BASE_URL=https://api-auction.ameydev.in  npm run k6:mixed
+
+> k6:mixed
+> k6 run scripts/05-mixed.js
+
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/05-mixed.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 600 max VUs, 2m30s max duration (incl. graceful stop):
+              * mixed: 200.00 iterations/s for 2m0s (maxVUs: 100-600, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<1000' p(95)=352.11ms
+    ✓ 'p(99)<2000' p(99)=368.62ms
+
+    http_req_failed
+    ✓ 'rate<0.10' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 23991   199.247015/s
+    checks_succeeded...: 100.00% 23991 out of 23991
+    checks_failed......: 0.00%   0 out of 23991
+
+    ✓ detail ok
+    ✓ list ok
+    ✓ me ok
+    ✓ bid success or business rejection
+
+    HTTP
+    http_req_duration..............: avg=177.56ms min=137.26ms med=156.94ms max=438.03ms p(90)=249.6ms  p(95)=352.11ms
+      { expected_response:true }...: avg=177.56ms min=137.26ms med=156.94ms max=438.03ms p(90)=249.6ms  p(95)=352.11ms
+    http_req_failed................: 0.00%  0 out of 23991
+    http_reqs......................: 23991  199.247015/s
+
+    EXECUTION
+    dropped_iterations.............: 9      0.074746/s
+    iteration_duration.............: avg=229.66ms min=187.66ms med=207.59ms max=774.07ms p(90)=389.42ms p(95)=403.9ms 
+    iterations.....................: 23991  199.247015/s
+    vus............................: 47     min=41         max=77 
+    vus_max........................: 109    min=109        max=109
+
+    NETWORK
+    data_received..................: 103 MB 859 kB/s
+    data_sent......................: 4.9 MB 40 kB/s
+
+
+
+
+running (2m00.4s), 000/109 VUs, 23991 complete and 0 interrupted iterations
+mixed ✓ [======================================] 000/109 VUs  2m0s  200.00 iters/s
+
+
+
+Test Load: Ran at a target rate of 200 requests/sec for 2 minutes with up to 109 virtual users, generating 23,991 total requests (~199.2 requests/sec).
+
+Reliability: 100% success rate with 0% failures (23,991 out of 23,991 checks passed across auction browsing, details, auth profile, and bidding).
+
+Speed & Latency: Highly stable across mixed operations with an average response time of ~178 ms and a 95th percentile of ~352 ms (well below the 1,000 ms threshold).
+
+Network: Downloaded 103 MB and uploaded 4.9 MB in total.

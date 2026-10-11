@@ -1,0 +1,79 @@
+BASE_URL=https://api-auction.ameydev.in BID_RATE=100 DURATION=1m npm run k6:bid
+
+> k6:bid
+> k6 run scripts/04-bidding.js
+
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/04-bidding.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 500 max VUs, 1m30s max duration (incl. graceful stop):
+              * bids: 100.00 iterations/s for 1m0s (maxVUs: 100-500, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    bid_latency
+    ✓ 'p(95)<1500' p(95)=368ms
+    ✓ 'p(99)<3000' p(99)=819.02ms
+
+    bid_success_rate
+    ✓ 'rate>0.01' rate=2.65%
+
+    http_req_failed
+    ✓ 'rate<0.20' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 5998    99.394132/s
+    checks_succeeded...: 100.00% 5998 out of 5998
+    checks_failed......: 0.00%   0 out of 5998
+
+    ✓ bid succeeded or was a business rejection
+
+    CUSTOM
+    bid_latency....................: avg=361.34ms min=246ms    med=352ms    max=1.84s    p(90)=365ms    p(95)=368ms  
+    bid_success_rate...............: 2.65%  159 out of 5998
+
+    HTTP
+    http_req_duration..............: avg=355.07ms min=245.72ms med=351.7ms  max=758.21ms p(90)=364.7ms  p(95)=368.15ms
+      { expected_response:true }...: avg=355.07ms min=245.72ms med=351.7ms  max=758.21ms p(90)=364.7ms  p(95)=368.15ms
+    http_req_failed................: 0.00%  0 out of 5998
+    http_reqs......................: 5998   99.394132/s
+
+    EXECUTION
+    dropped_iterations.............: 3      0.049714/s
+    iteration_duration.............: avg=361.47ms min=245.95ms med=351.85ms max=1.84s    p(90)=364.88ms p(95)=368.37ms
+    iterations.....................: 5998   99.394132/s
+    vus............................: 36     min=34          max=99 
+    vus_max........................: 103    min=100         max=103
+
+    NETWORK
+    data_received..................: 6.6 MB 110 kB/s
+    data_sent......................: 3.2 MB 53 kB/s
+
+
+
+
+running (1m00.3s), 000/103 VUs, 5998 complete and 0 interrupted iterations
+bids ✓ [======================================] 000/103 VUs  1m0s  100.00 iters/s
+
+
+
+Test Load: Ran at a target rate of 100 bids/sec for 1 minute with up to 103 virtual users, generating 5,998 total bid requests (~99.4 requests/sec).
+
+Reliability: 100% check success rate with 0% network/system errors; 2.65% of bids succeeded (159 winning bids), with remaining bids cleanly handled as expected business rejections (outbid/conflict).
+
+Speed & Latency: Strong performance under heavy write contention with an average response time of ~355 ms and a 95th percentile of ~368 ms (well below the 1,500 ms threshold).
+
+Network: Downloaded 6.6 MB and uploaded 3.2 MB in total.
