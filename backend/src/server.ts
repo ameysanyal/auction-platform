@@ -3,13 +3,14 @@ import "dotenv/config";
 import { Server } from "socket.io";
 import http from "http";
 import mongoose from "mongoose";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { Redis } from "ioredis";
 import app from "./app.js";
 import connectDB from "./config/db.js";
-import { appLogger } from './config/logger.js';
+import { appLogger } from "./config/logger.js";
 import redis from "./config/redis.js";
 import { auctionQueue } from "./jobs/auction.queue.js";
 import { auctionWorker } from "./workers/auction.worker.js";
-
 
 import {
   registerAuctionSocket,
@@ -23,6 +24,9 @@ const logger = appLogger;
 
 const server: http.Server = http.createServer(app);
 let isShuttingDown = false;
+
+let socketPubClient: Redis | null = null;
+let socketSubClient: Redis | null = null;
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -85,6 +89,20 @@ const shutdown = async (signal: NodeJS.Signals) => {
     await closeSocketServer();
     logger.info("Socket.IO server closed.");
 
+    if (socketPubClient) {
+      await socketPubClient.quit().catch((err) => {
+        logger.error("Error closing Socket.IO Redis Pub client:", err);
+      });
+      logger.info("Socket.IO Redis Pub client closed.");
+    }
+
+    if (socketSubClient) {
+      await socketSubClient.quit().catch((err) => {
+        logger.error("Error closing Socket.IO Redis Sub client:", err);
+      });
+      logger.info("Socket.IO Redis Sub client closed.");
+    }
+
     await closeHttpServer();
     logger.info("HTTP server closed.");
 
@@ -119,7 +137,48 @@ process.on("SIGINT", () => {
 
 const startServer = async () => {
   await connectDB();
-  startFallbackCron();
+
+  // Socket.IO Redis adapter for cross-instance broadcasts
+  const redisHost: string = (process.env.REDIS_HOST || "127.0.0.1").trim();
+  const redisPort: number = process.env.REDIS_PORT
+    ? parseInt(process.env.REDIS_PORT, 10)
+    : 6385;
+  const redisPassword: string = (process.env.REDIS_PASSWORD || "auctionbidding").trim();
+  const isTls = process.env.REDIS_TLS === "true" || redisPort === 6380;
+
+  socketPubClient = new Redis({
+    host: redisHost,
+    port: redisPort,
+    password: redisPassword,
+    maxRetriesPerRequest: null,
+    ...(isTls ? { tls: {} } : {}),
+  });
+
+  socketSubClient = socketPubClient.duplicate();
+
+  socketPubClient.on("error", (err: Error) => {
+    logger.error("❌ Socket.IO Redis Pub Client Error:", err);
+  });
+
+  socketSubClient.on("error", (err: Error) => {
+    logger.error("❌ Socket.IO Redis Sub Client Error:", err);
+  });
+
+  await Promise.all([
+    socketPubClient.ping(),
+    socketSubClient.ping(),
+  ]);
+
+  io.adapter(createAdapter(socketPubClient, socketSubClient));
+  logger.info("✅ Socket.IO Redis adapter attached.");
+
+  // Run the fallback cleanup cron only on the designated instance
+  if (process.env.ENABLE_FALLBACK_CRON === "true") {
+    startFallbackCron();
+    logger.info("⏰ Fallback cron scheduler enabled on this instance.");
+  } else {
+    logger.info("ℹ️ Fallback cron scheduler disabled on this instance (ENABLE_FALLBACK_CRON != true).");
+  }
 
   server.listen(PORT, () => {
     logger.info(`[server]: Server is running seamlessly on port ${PORT}`);

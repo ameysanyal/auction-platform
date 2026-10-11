@@ -6,7 +6,7 @@ import { Worker, type ConnectionOptions } from "bullmq";
 import auctionService from "../services/auction.service.js";
 
 // Retrieves the Redis host from environment variables, defaulting to '127.0.0.1' (localhost) if not provided.
-const redisHost: string = process.env.REDIS_HOST || "127.0.0.1";
+const redisHost: string = (process.env.REDIS_HOST || "127.0.0.1").trim();
 
 // Retrieves the Redis port from environment variables, parses it into a base-10 integer, 
 // or defaults to 6385 if the environment variable is missing.
@@ -16,6 +16,7 @@ const redisPort: number = process.env.REDIS_PORT
 
 // Retrieves the Redis password from environment variables (defaulting to 'auctionbidding') and strips any accidental whitespace.
 const redisPassword: string = (process.env.REDIS_PASSWORD || "auctionbidding").trim();
+const isTls = process.env.REDIS_TLS === "true" || redisPort === 6380;
 
 // Creates and exports a strongly-typed configuration object for the Redis connection.
 export const redisConnection: ConnectionOptions = {
@@ -23,6 +24,7 @@ export const redisConnection: ConnectionOptions = {
   port: redisPort,                                  // Sets the Redis server port.
   password: redisPassword,                          // Sets the password authentication for Redis.
   maxRetriesPerRequest: null,                       // Crucial BullMQ setting: disables retry limits on commands so BullMQ can handle its block-waiting mechanisms without throwing errors.
+  ...(isTls ? { tls: {} } : {}),
 };
 
 // Instantiates and exports a BullMQ Worker instance named 'auctionWorker'.

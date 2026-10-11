@@ -8,6 +8,7 @@ const redisPort: number = process.env.REDIS_PORT
 
 // The .trim() method wipes out hidden spaces or \r carriage returns!
 const redisPassword: string = (process.env.REDIS_PASSWORD || "auctionbidding").trim();
+const isTls = process.env.REDIS_TLS === "true" || redisPort === 6380;
 
 // 2. Initialize the Redis client instance directly
 const redis = new Redis({
@@ -15,6 +16,7 @@ const redis = new Redis({
   port: redisPort,
   password: redisPassword,
   maxRetriesPerRequest: null,
+  ...(isTls ? { tls: {} } : {}),
 });
 
 // 3. Setup event listeners
