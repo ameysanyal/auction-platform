@@ -65,3 +65,64 @@ Reliability: 100% success rate with 0% failures (every request returned HTTP 200
 Speed & Latency: Highly stable performance with an average response time of ~152 ms and a 95th percentile of ~160 ms (comfortably below your 500 ms threshold).
 
 Network: Downloaded 2.1 MB and uploaded 210 kB in total.
+
+2] Multi- instance testing result
+
+amzic@amzicom MINGW64 /e/auction-platform/auction-loadtest (main)
+$ BASE_URL=https://api-auction.ameydev.in k6 run ./scripts/01-health.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: ./scripts/01-health.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 10 max VUs, 1m0s max duration (incl. graceful stop):
+              * default: 10 looping VUs for 30s (gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=168.37ms
+    ✓ 'p(99)<1000' p(99)=169.46ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1946    64.604144/s
+    checks_succeeded...: 100.00% 1946 out of 1946
+    checks_failed......: 0.00%   0 out of 1946
+
+    ✓ health is 200
+
+    HTTP
+    http_req_duration..............: avg=151.46ms min=127.09ms med=150.79ms max=184ms p(90)=165.2ms  p(95)=168.37ms
+      { expected_response:true }...: avg=151.46ms min=127.09ms med=150.79ms max=184ms p(90)=165.2ms  p(95)=168.37ms
+    http_req_failed................: 0.00%  0 out of 1946
+    http_reqs......................: 1946   64.604144/s
+
+    EXECUTION
+    iteration_duration.............: avg=154.45ms min=127.87ms med=150.92ms max=1.45s p(90)=166.76ms p(95)=168.57ms
+    iterations.....................: 1946   64.604144/s
+    vus............................: 10     min=10        max=10
+    vus_max........................: 10     min=10        max=10
+
+    NETWORK
+    data_received..................: 2.1 MB 68 kB/s
+    data_sent......................: 211 kB 7.0 kB/s
+
+
+
+
+running (0m30.1s), 00/10 VUs, 1946 complete and 0 interrupted iterations
+default ✓ [======================================] 10 VUs  30s

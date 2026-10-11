@@ -76,4 +76,76 @@ Reliability: 100% check success rate with 0% network/system errors; 2.65% of bid
 
 Speed & Latency: Strong performance under heavy write contention with an average response time of ~355 ms and a 95th percentile of ~368 ms (well below the 1,500 ms threshold).
 
-Network: Downloaded 6.6 MB and uploaded 3.2 MB in total.
+Network: Downloaded 6.6 MB and uploaded 3.2 MB in total.
+
+
+2] Multi- instance testing result
+
+ BASE_URL=https://api-auction.ameydev.in BID_RATE=100 DURATION=1m npm run k6:bid
+
+> k6:bid
+> k6 run scripts/04-bidding.js
+
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/04-bidding.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 500 max VUs, 1m30s max duration (incl. graceful stop):
+              * bids: 100.00 iterations/s for 1m0s (maxVUs: 100-500, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    bid_latency
+    ✓ 'p(95)<1500' p(95)=364ms
+    ✓ 'p(99)<3000' p(99)=677ms
+
+    bid_success_rate
+    ✓ 'rate>0.01' rate=2.63%
+
+    http_req_failed
+    ✓ 'rate<0.20' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 6001    99.442166/s
+    checks_succeeded...: 100.00% 6001 out of 6001
+    checks_failed......: 0.00%   0 out of 6001
+
+    ✓ bid succeeded or was a business rejection
+
+    CUSTOM
+    bid_latency....................: avg=349.67ms min=225ms    med=343ms    max=797ms    p(90)=358ms    p(95)=364ms   
+    bid_success_rate...............: 2.63%  158 out of 6001
+
+    HTTP
+    http_req_duration..............: avg=344.22ms min=224.58ms med=342.79ms max=453.07ms p(90)=357.94ms p(95)=363.31ms
+      { expected_response:true }...: avg=344.22ms min=224.58ms med=342.79ms max=453.07ms p(90)=357.94ms p(95)=363.31ms
+    http_req_failed................: 0.00%  0 out of 6001
+    http_reqs......................: 6001   99.442166/s
+
+    EXECUTION
+    iteration_duration.............: avg=349.59ms min=224.99ms med=342.97ms max=796.86ms p(90)=358.35ms p(95)=364.44ms
+    iterations.....................: 6001   99.442166/s
+    vus............................: 34     min=33          max=68 
+    vus_max........................: 100    min=100         max=100
+
+    NETWORK
+    data_received..................: 6.6 MB 110 kB/s
+    data_sent......................: 3.2 MB 53 kB/s
+
+
+
+
+running (1m00.3s), 000/100 VUs, 6001 complete and 0 interrupted iterations
+bids ✓ [======================================] 000/100 VUs  1m0s  100.00 iters/s

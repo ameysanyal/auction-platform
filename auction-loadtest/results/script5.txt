@@ -73,3 +73,71 @@ Reliability: 100% success rate with 0% failures (23,991 out of 23,991 checks pas
 Speed & Latency: Highly stable across mixed operations with an average response time of ~178 ms and a 95th percentile of ~352 ms (well below the 1,000 ms threshold).
 
 Network: Downloaded 103 MB and uploaded 4.9 MB in total.
+
+2] Multi- instance testing result
+
+ BASE_URL=https://api-auction.ameydev.in TARGET_RPS=600  npm run k6:mixed
+
+> k6:mixed
+> k6 run scripts/05-mixed.js
+
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/05-mixed.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1800 max VUs, 2m30s max duration (incl. graceful stop):
+              * mixed: 600.00 iterations/s for 2m0s (maxVUs: 120-1800, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<1000' p(95)=344.89ms
+    ✓ 'p(99)<2000' p(99)=367.07ms
+
+    http_req_failed
+    ✓ 'rate<0.10' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 71732   595.812609/s
+    checks_succeeded...: 100.00% 71732 out of 71732
+    checks_failed......: 0.00%   0 out of 71732
+
+    ✓ list ok
+    ✓ me ok
+    ✓ detail ok
+    ✓ bid success or business rejection
+
+    HTTP
+    http_req_duration..............: avg=177.31ms min=134.91ms med=154.59ms max=1.63s p(90)=324.56ms p(95)=344.89ms
+      { expected_response:true }...: avg=177.31ms min=134.91ms med=154.59ms max=1.63s p(90)=324.56ms p(95)=344.89ms
+    http_req_failed................: 0.00%  0 out of 71732
+    http_reqs......................: 71732  595.812609/s
+
+    EXECUTION
+    dropped_iterations.............: 269    2.234339/s
+    iteration_duration.............: avg=229.76ms min=185.35ms med=205.08ms max=3.95s p(90)=379.25ms p(95)=396.13ms
+    iterations.....................: 71732  595.812609/s
+    vus............................: 137    min=127        max=257
+    vus_max........................: 279    min=251        max=279
+
+    NETWORK
+    data_received..................: 313 MB 2.6 MB/s
+    data_sent......................: 15 MB  121 kB/s
+
+
+
+
+running (2m00.4s), 0000/0279 VUs, 71732 complete and 0 interrupted iterations
+mixed ✓ [======================================] 0000/0279 VUs  2m0s  600.00 iters/s

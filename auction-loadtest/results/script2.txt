@@ -66,4 +66,68 @@ Reliability: 100% success rate with 0% failures (all 7,760 requests across aucti
 
 Speed & Latency: Excellent responsiveness with an average response time of ~157 ms and a 95th percentile of ~177 ms (well below the 500 ms threshold).
 
-Network: Downloaded 36 MB and uploaded 1.1 MB in total.
+Network: Downloaded 36 MB and uploaded 1.1 MB in total.
+
+
+2] Multi- instance testing result
+
+amzic@amzicom MINGW64 /e/auction-platform/auction-loadtest (main)
+$  BASE_URL=https://api-auction.ameydev.in TARGET_RPS=100 DURATION=1m k6 run scripts/02-auctions.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/02-auctions.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 1m30s max duration (incl. graceful stop):
+              * auction_reads: 100.00 iterations/s for 1m0s (maxVUs: 50-200, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=167.25ms
+    ✓ 'p(99)<1000' p(99)=173.57ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 7779    128.987953/s
+    checks_succeeded...: 100.00% 7779 out of 7779
+    checks_failed......: 0.00%   0 out of 7779
+
+    ✓ auction list is 200
+    ✓ auction detail is 200
+
+    HTTP
+    http_req_duration..............: avg=153.79ms min=132.33ms med=152.57ms max=202.61ms p(90)=164.36ms p(95)=167.25ms
+      { expected_response:true }...: avg=153.79ms min=132.33ms med=152.57ms max=202.61ms p(90)=164.36ms p(95)=167.25ms
+    http_req_failed................: 0.00%  0 out of 7779
+    http_reqs......................: 7779   128.987953/s
+
+    EXECUTION
+    dropped_iterations.............: 1      0.016582/s
+    iteration_duration.............: avg=202.24ms min=133.87ms med=157.09ms max=675.31ms p(90)=314.47ms p(95)=327.81ms
+    iterations.....................: 6000   99.489358/s
+    vus............................: 23     min=16        max=28
+    vus_max........................: 51     min=51        max=51
+
+    NETWORK
+    data_received..................: 33 MB  540 kB/s
+    data_sent......................: 1.1 MB 18 kB/s
+
+
+
+
+running (1m00.3s), 000/051 VUs, 6000 complete and 0 interrupted iterations
+auction_reads ✓ [======================================] 000/051 VUs  1m0s  100.00 iters/s

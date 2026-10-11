@@ -66,4 +66,67 @@ Reliability: 100% success rate with 0% failures (every request across auth profi
 
 Speed & Latency: Highly consistent performance with an average response time of ~157 ms and a 95th percentile of ~176 ms (well below the 500 ms threshold).
 
-Network: Downloaded 13 MB and uploaded 5.8 MB in total.
+Network: Downloaded 13 MB and uploaded 5.8 MB in total.
+
+2] Multi- instance testing result
+
+amzic@amzicom MINGW64 /e/auction-platform/auction-loadtest (main)
+$  BASE_URL=https://api-auction.ameydev.in k6 run ./scripts/03-authenticated.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: ./scripts/03-authenticated.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 1m30s max duration (incl. graceful stop):
+              * authenticated_reads: 100.00 iterations/s for 1m0s (maxVUs: 50-200, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=173.28ms
+    ✓ 'p(99)<1000' p(99)=179.83ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 11964   197.651992/s
+    checks_succeeded...: 100.00% 11964 out of 11964
+    checks_failed......: 0.00%   0 out of 11964
+
+    ✓ auth/me is 200
+    ✓ eligibility is 200
+
+    HTTP
+    http_req_duration..............: avg=156.12ms min=130.72ms med=154.54ms max=560.66ms p(90)=169.5ms  p(95)=173.28ms
+      { expected_response:true }...: avg=156.12ms min=130.72ms med=154.54ms max=560.66ms p(90)=169.5ms  p(95)=173.28ms
+    http_req_failed................: 0.00%  0 out of 11964
+    http_reqs......................: 11964  197.651992/s
+
+    EXECUTION
+    dropped_iterations.............: 19     0.313891/s
+    iteration_duration.............: avg=317.34ms min=278.67ms med=307.62ms max=1.81s    p(90)=340.21ms p(95)=345.07ms
+    iterations.....................: 5982   98.825996/s
+    vus............................: 31     min=28         max=50
+    vus_max........................: 69     min=69         max=69
+
+    NETWORK
+    data_received..................: 13 MB  210 kB/s
+    data_sent......................: 5.8 MB 96 kB/s
+
+
+
+
+running (1m00.5s), 000/069 VUs, 5982 complete and 0 interrupted iterations
+authenticated_reads ✓ [======================================] 000/069 VUs  1m0s  100.00 iters/s
