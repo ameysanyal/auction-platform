@@ -3,7 +3,7 @@ export default {
     {
       name: "auction-api-1",
       cwd: "/var/www/auction-platform/backend",
-      script: "dist/server.js",
+      script: "/var/www/auction-platform/backend/dist/server.js",
       exec_mode: "fork",
       instances: 1,
       env: {
@@ -16,7 +16,7 @@ export default {
     {
       name: "auction-api-2",
       cwd: "/var/www/auction-platform/backend",
-      script: "dist/server.js",
+      script: "/var/www/auction-platform/backend/dist/server.js",
       exec_mode: "fork",
       instances: 1,
       env: {
@@ -28,6 +28,5 @@ export default {
     },
   ],
 };
-
 // The explicit PM2 environment variables override matching values loaded by dotenv. 
 // Ensure your code actually honors ENABLE_FALLBACK_CRON before using this configuration.
