@@ -31,6 +31,7 @@ const orderSchema =
           Schema.Types.ObjectId,
         ref: "AuctionItem",
         required: true,
+        unique: true,
       },
 
       winner: {
@@ -70,6 +71,8 @@ const orderSchema =
       timestamps: true,
     }
   );
+
+orderSchema.index({ auction: 1 }, { unique: true });
 
 export default mongoose.model<IOrder>(
   "Order",
