@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { performance } from "node:perf_hooks";
 import { auctionQueue } from "../jobs/auction.queue.js";
 import { appLogger } from "../config/logger.js";
-import { io } from "../server.js";
+import { io } from "../sockets/io.js";
 import { acquireLock, releaseLock } from "../utils/redis-lock.util.js";
 
 // Define an enum for the explicit auction statuses

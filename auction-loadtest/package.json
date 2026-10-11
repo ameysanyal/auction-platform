@@ -6,6 +6,7 @@
     "seed": "node scripts/seed.mjs",
     "reset": "node scripts/reset.mjs",
     "socket": "node scripts/socketio-load.mjs",
+    "verify:cross-instance": "node scripts/verify-cross-instance.mjs",
     "k6:health": "k6 run scripts/01-health.js",
     "k6:auctions": "k6 run scripts/02-auctions.js",
     "k6:auth": "k6 run scripts/03-authenticated.js",

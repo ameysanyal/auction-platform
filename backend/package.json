@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "node --use-system-ca --import tsx/esm src/server.ts",
     "dev:watch": "tsx watch src/server.ts",
+    "dev:worker": "node --use-system-ca --import tsx/esm src/worker.ts",
+    "dev:scheduler": "node --use-system-ca --import tsx/esm src/scheduler.ts",
     "build": "tsc",
-    "start": "node --use-system-ca dist/server.js"
+    "start": "node dist/server.js",
+    "start:worker": "node dist/worker.js",
+    "start:scheduler": "node dist/scheduler.js"
   },
   "keywords": [],
   "author": "",

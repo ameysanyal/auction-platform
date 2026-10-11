@@ -3,7 +3,7 @@ import AuctionItem from "../models/auction-item.model.js";
 import User from "../models/user.model.js";
 import { acquireLock, releaseLock } from "../utils/redis-lock.util.js";
 import { Types } from "mongoose";
-import { io } from "../server.js";
+import { io } from "../sockets/io.js";
 import mongoose from "mongoose";
 import { appLogger } from "../config/logger.js";
 import AppError from "../utils/app-error.util.js";
